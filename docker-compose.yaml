@@ -1,0 +1,91 @@
+version: '3.7'
+services:
+  postgres:
+    image: postgres:15.3-alpine3.17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - 5432:5432
+    volumes:
+      - ./db_scripts:/docker-entrypoint-initdb.d
+      - ~/data/traffic_light/postgres:/var/lib/postgresql/data
+  rabbitmq:
+    image: rabbitmq:alpine
+    ports:
+      - 5672:5672
+      - 15672:15672
+    volumes:
+      - ~/data/traffic_light/rabbitmq:/var/lib/rabbitmq
+  frontend:
+    image: light-traffic-frontend:local
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    volumes:
+      - ./frontend:/app
+    ports:
+      - 3000:3000
+    command: ['npm', 'start', 'dev']
+  event_store:
+    image: light-traffic-event-store:local
+    build:
+      context: .
+      dockerfile: ./event_store/Dockerfile
+    depends_on:
+      - postgres
+    command: ['go', 'run', 'event_store.go']
+    environment:
+      - POSTGRES_USER=even_store_usr
+      - POSTGRES_PASSWORD=even_store_pass
+      - POSTGRES_DB=even_store
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - CONTROLLER_TOPIC=controller
+      - PROJECTOR_TOPIC=projector
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+    volumes:
+      - ./event_store:/app
+  controller:
+    image: light-traffic-controller:local
+    build:
+      context: .
+      dockerfile: ./controller/Dockerfile
+    depends_on:
+      - postgres
+      - rabbitmq
+    environment:
+      - POSTGRES_USER=controller_usr
+      - POSTGRES_PASSWORD=controller_pass
+      - POSTGRES_DB=controller
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - CONTROLLER_TOPIC=controller
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+    volumes:
+      - ./controller:/app
+    command: ['go', 'run', 'controller.go']
+  projector:
+    image: light-traffic-projector:local
+    build:
+      context: .
+      dockerfile: ./projector/Dockerfile
+    depends_on:
+      - postgres
+      - rabbitmq
+    environment:
+      - POSTGRES_USER=projector_usr
+      - POSTGRES_PASSWORD=projector_pass
+      - POSTGRES_DB=projections
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - PROJECTOR_TOPIC=projector
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+    volumes:
+      - ./projector:/app
+    command: ['go', 'run', 'projector.go']
+
+  
