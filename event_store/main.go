@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 )
 
 func dispatch(event model.EventEmitDto) error {
@@ -18,6 +19,11 @@ func dispatch(event model.EventEmitDto) error {
 func main() {
 	app := fiber.New()
 	defer repo.CloseDB()
+
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "*",
+		AllowMethods: "GET,POST,HEAD,PUT,DELETE,PATCH",
+	}))
 
 	app.Post("/emit", func(c *fiber.Ctx) error {
 		body := c.Body()
