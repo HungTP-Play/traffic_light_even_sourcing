@@ -45,6 +45,9 @@ services:
       - PROJECTOR_TOPIC=projector
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
+      - PORT=1111
+    ports:
+      - 1111:1111
     volumes:
       - ./event_store:/app
   controller:
@@ -64,6 +67,9 @@ services:
       - CONTROLLER_TOPIC=controller
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
+      - PORT=2222
+    ports:
+      - 2222:2222
     volumes:
       - ./controller:/app
     command: ['go', 'run', 'main.go']
@@ -84,6 +90,9 @@ services:
       - PROJECTOR_TOPIC=projector
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
+      - PORT=3333
+    ports:
+      - 3333:3333
     volumes:
       - ./projector:/app
     command: ['go', 'run', 'main.go']
