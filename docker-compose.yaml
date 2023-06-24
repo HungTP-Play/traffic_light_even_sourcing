@@ -106,7 +106,7 @@ services:
   #   restart: unless-stopped
   #   volumes:
   #     - ./prometheus.yml:/etc/prometheus/prometheus.yml
-  #     - ~/data/traffic_light/prometheus:/prometheus
+  #     - ./prometheus:/prometheus
   #   command:
   #     - '--config.file=/etc/prometheus/prometheus.yml'
   #     - '--storage.tsdb.path=/prometheus'
@@ -124,7 +124,7 @@ services:
   #   container_name: grafana
   #   restart: unless-stopped
   #   volumes:
-  #     - ~/data/traffic_light/grafana:/var/lib/grafana
+  #     - ./grafana:/var/lib/grafana
   #   environment:
   #     - GF_SECURITY_ADMIN_PASSWORD=admin
   #   ports:
