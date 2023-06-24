@@ -2,11 +2,12 @@ FROM golang:1.19-bullseye
 
 WORKDIR /app
 
-# COPY all files in ./event_store to /app
-COPY ./event_store/. .
-
-COPY go.mod .
+COPY go.mod ./
 
 RUN go mod download
 
-RUN ls
+COPY . .
+
+RUN go build -o /app/bin/event_store .
+
+CMD ["/app/bin/event_store"]

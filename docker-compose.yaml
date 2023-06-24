@@ -30,11 +30,11 @@ services:
   event_store:
     image: light-traffic-event-store:local
     build:
-      context: .
-      dockerfile: ./event_store/Dockerfile
+      context: ./event_store
+      dockerfile: Dockerfile
     depends_on:
       - postgres
-    command: ['go', 'run', 'event_store.go']
+    command: ['go', 'run', 'main.go']
     environment:
       - POSTGRES_USER=even_store_usr
       - POSTGRES_PASSWORD=even_store_pass
@@ -50,8 +50,8 @@ services:
   controller:
     image: light-traffic-controller:local
     build:
-      context: .
-      dockerfile: ./controller/Dockerfile
+      context: ./controller
+      dockerfile: Dockerfile
     depends_on:
       - postgres
       - rabbitmq
@@ -66,12 +66,12 @@ services:
       - RABBITMQ_PORT=5672
     volumes:
       - ./controller:/app
-    command: ['go', 'run', 'controller.go']
+    command: ['go', 'run', 'main.go']
   projector:
     image: light-traffic-projector:local
     build:
-      context: .
-      dockerfile: ./projector/Dockerfile
+      context: ./projector
+      dockerfile: Dockerfile
     depends_on:
       - postgres
       - rabbitmq
@@ -86,6 +86,6 @@ services:
       - RABBITMQ_PORT=5672
     volumes:
       - ./projector:/app
-    command: ['go', 'run', 'projector.go']
+    command: ['go', 'run', 'main.go']
 
   

@@ -2,8 +2,12 @@ FROM golang:1.19-bullseye
 
 WORKDIR /app
 
-COPY ./controller/. .
-
-COPY go.mod .
+COPY go.mod ./
 
 RUN go mod download
+
+COPY . .
+
+RUN go build -o /app/bin/controller .
+
+CMD ["/app/bin/controller"]
