@@ -17,6 +17,9 @@ services:
       - 15672:15672
     volumes:
       - ~/data/traffic_light/rabbitmq:/var/lib/rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
   frontend:
     image: light-traffic-frontend:local
     build:
@@ -34,15 +37,16 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - postgres
+      - rabbitmq
     command: ['go', 'run', 'main.go']
     environment:
-      - POSTGRES_USER=even_store_usr
-      - POSTGRES_PASSWORD=even_store_pass
-      - POSTGRES_DB=even_store
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DATABASE=event_store
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
-      - CONTROLLER_TOPIC=controller
-      - PROJECTOR_TOPIC=projector
+      - CONTROLLER_QUEUE=controller
+      - PROJECTION_QUEUE=projection
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
       - PORT=1111
@@ -56,17 +60,17 @@ services:
       context: ./controller
       dockerfile: Dockerfile
     depends_on:
-      - postgres
       - rabbitmq
+      - postgres
     environment:
-      - POSTGRES_USER=controller_usr
-      - POSTGRES_PASSWORD=controller_pass
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=controller
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
-      - CONTROLLER_TOPIC=controller
-      - RABBITMQ_HOST=rabbitmq
-      - RABBITMQ_PORT=5672
+      - CONTROLLER_QUEUE=controller
+      - PROJECTION_QUEUE=projection
+      - RABBITMQ_CONNECTION_STRING=amqp://guest:guest@rabbitmq:5672/
       - PORT=2222
     ports:
       - 2222:2222
@@ -79,22 +83,20 @@ services:
       context: ./projector
       dockerfile: Dockerfile
     depends_on:
-      - postgres
       - rabbitmq
+      - postgres
     environment:
-      - POSTGRES_USER=projector_usr
-      - POSTGRES_PASSWORD=projector_pass
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=projections
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
-      - PROJECTOR_TOPIC=projector
-      - RABBITMQ_HOST=rabbitmq
-      - RABBITMQ_PORT=5672
+      - CONTROLLER_QUEUE=controller
+      - PROJECTION_QUEUE=projection
+      - RABBITMQ_CONNECTION_STRING=amqp://guest:guest@rabbitmq:5672/
       - PORT=3333
     ports:
       - 3333:3333
     volumes:
       - ./projector:/app
     command: ['go', 'run', 'main.go']
-
-  

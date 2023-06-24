@@ -10,19 +10,15 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func dispatch(eventIn chan model.EventEmitDto, eventOut chan error) {
+func dispatch(event model.EventEmitDto) error {
 	// Get event from event_in
-	event := <-eventIn
-	err := queue.PublishEvent(event)
-	eventOut <- err
+	return queue.PublishEvent(event)
 }
 
 func main() {
 	app := fiber.New()
 
 	app.Post("/emit", func(c *fiber.Ctx) error {
-		eventIn := make(chan model.EventEmitDto)
-		eventOut := make(chan error)
 		body := c.Body()
 
 		// Marshal body to map[string]interface{}
@@ -45,16 +41,19 @@ func main() {
 			})
 		}
 
-		go dispatch(eventIn, eventOut)
-		eventResponse := <-eventOut
-		if eventResponse != nil {
+		// Dispatch event to queue
+
+		err = dispatch(event)
+		if err != nil {
 			// Return with 500
 			return c.Status(500).JSON(fiber.Map{
 				"status": "failed",
-				"error":  eventResponse.Error(),
+				"error":  err.Error(),
 			})
 		}
-		return c.JSON(eventResponse)
+		return c.JSON(map[string]interface{}{
+			"status": "success",
+		})
 	})
 
 	port := os.Getenv("PORT")

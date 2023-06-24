@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"projector/queue"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -17,6 +18,8 @@ func main() {
 	if port == "" {
 		port = "3333"
 	}
+
+	go queue.ConsumeEvents()
 
 	app.Listen(":" + port)
 }

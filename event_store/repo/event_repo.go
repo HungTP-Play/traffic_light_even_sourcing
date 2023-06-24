@@ -60,13 +60,14 @@ func StoreEvent(event model.EventEmitDto) error {
 	db := GetDB()
 	defer CloseDB()
 
+	fmt.Println("[[Event Store]] Storing event: ", event)
 	// Map event to model by event_name
 	switch event.EventName {
 	case "registration_event":
 		registrationEvent := model.RegistrationEvent{
 			ID:        event.EventID,
-			LightID:   event.EventData.(model.RegistrationEventData).LightID,
-			Location:  event.EventData.(model.RegistrationEventData).Location,
+			LightID:   event.EventData.(map[string]interface{})["light_id"].(string),
+			Location:  event.EventData.(map[string]interface{})["location"].(string),
 			EventCore: model.EventCore{EventName: event.EventName, EmittedAt: event.EmittedAt},
 		}
 
@@ -74,9 +75,9 @@ func StoreEvent(event model.EventEmitDto) error {
 	case "state_change_event":
 		stateChangeEvent := model.StateChangeEvent{
 			ID:        event.EventID,
-			LightID:   event.EventData.(model.StateChangeData).LightID,
-			FromState: event.EventData.(model.StateChangeData).FromState,
-			ToState:   event.EventData.(model.StateChangeData).ToState,
+			LightID:   event.EventData.(map[string]interface{})["light_id"].(string),
+			FromState: event.EventData.(map[string]interface{})["from_state"].(string),
+			ToState:   event.EventData.(map[string]interface{})["to_state"].(string),
 			EventCore: model.EventCore{EventName: event.EventName, EmittedAt: event.EmittedAt},
 		}
 
@@ -84,8 +85,8 @@ func StoreEvent(event model.EventEmitDto) error {
 	case "light_state_override":
 		lightStateOverrideEvent := model.LightStateOverrideEvent{
 			ID:        event.EventID,
-			LightID:   event.EventData.(model.LightStateOverrideData).LightID,
-			ToState:   event.EventData.(model.LightStateOverrideData).ToState,
+			LightID:   event.EventData.(map[string]interface{})["light_id"].(string),
+			ToState:   event.EventData.(map[string]interface{})["to_state"].(string),
 			EventCore: model.EventCore{EventName: event.EventName, EmittedAt: event.EmittedAt},
 		}
 
@@ -94,7 +95,7 @@ func StoreEvent(event model.EventEmitDto) error {
 	case "light_state_override_response":
 		lightStateOverrideDoneEvent := model.LightStateOverrideDoneEvent{
 			ID:        event.EventID,
-			LightID:   event.EventData.(model.LightStateOverrideData).LightID,
+			LightID:   event.EventData.(map[string]interface{})["light_id"].(string),
 			EventCore: model.EventCore{EventName: event.EventName, EmittedAt: event.EmittedAt},
 		}
 
@@ -102,6 +103,6 @@ func StoreEvent(event model.EventEmitDto) error {
 	}
 
 	fmt.Printf("[[Event Store]] Event %s stored successfully!! 🎉🎉🎉\n", event.EventName)
-	fmt.Printf("[[Event Store]] Event Emit data %v\n", event)
+	fmt.Printf("[[Event Store]] Event stored data %v\n", event)
 	return nil
 }

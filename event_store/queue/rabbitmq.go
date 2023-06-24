@@ -3,6 +3,7 @@ package queue
 import (
 	"encoding/json"
 	"event_store/model"
+	"fmt"
 	"os"
 
 	"github.com/streadway/amqp"
@@ -41,6 +42,9 @@ func GetRabbitMQConnection() *amqp.Connection {
 
 func PublishProjectionEvents(event model.EventEmitDto) error {
 	conn := GetRabbitMQConnection()
+	if conn.IsClosed() {
+		conn = Connect()
+	}
 	defer conn.Close()
 
 	ch, err := conn.Channel()
@@ -49,13 +53,14 @@ func PublishProjectionEvents(event model.EventEmitDto) error {
 	}
 	defer ch.Close()
 
+	projectionQueueName := os.Getenv("PROJECTION_QUEUE")
 	q, err := ch.QueueDeclare(
-		"projections", // name
-		false,         // durable
-		false,         // delete when unused
-		false,         // exclusive
-		false,         // no-wait
-		nil,           // arguments
+		projectionQueueName, // name
+		false,               // durable
+		false,               // delete when unused
+		false,               // exclusive
+		false,               // no-wait
+		nil,                 // arguments
 	)
 	if err != nil {
 		return err
@@ -79,11 +84,15 @@ func PublishProjectionEvents(event model.EventEmitDto) error {
 	if err != nil {
 		return err
 	}
+	fmt.Printf("[[Event Store]] Published event: %v to %v 🎉\n", event, projectionQueueName)
 	return nil
 }
 
-func PublishMetadataEvents(event model.EventEmitDto) error {
+func PublishControllerEvents(event model.EventEmitDto) error {
 	conn := GetRabbitMQConnection()
+	if conn.IsClosed() {
+		conn = Connect()
+	}
 	defer conn.Close()
 
 	ch, err := conn.Channel()
@@ -92,13 +101,14 @@ func PublishMetadataEvents(event model.EventEmitDto) error {
 	}
 	defer ch.Close()
 
+	controllerQueueName := os.Getenv("CONTROLLER_QUEUE")
 	q, err := ch.QueueDeclare(
-		"metadata", // name
-		false,      // durable
-		false,      // delete when unused
-		false,      // exclusive
-		false,      // no-wait
-		nil,        // arguments
+		controllerQueueName, // name
+		false,               // durable
+		false,               // delete when unused
+		false,               // exclusive
+		false,               // no-wait
+		nil,                 // arguments
 	)
 	if err != nil {
 		return err
@@ -122,13 +132,15 @@ func PublishMetadataEvents(event model.EventEmitDto) error {
 	if err != nil {
 		return err
 	}
+
+	fmt.Printf("[[Event Store]] Published event: %v to %v 🎉\n", event, controllerQueueName)
 	return nil
 }
 
 func PublishEvent(event model.EventEmitDto) error {
 	switch event.EventName {
-	case "registration":
-		err := PublishMetadataEvents(event)
+	case "registration_event":
+		err := PublishControllerEvents(event)
 		if err != nil {
 			return err
 		}
@@ -137,12 +149,13 @@ func PublishEvent(event model.EventEmitDto) error {
 		if err != nil {
 			return err
 		}
+		fmt.Println("[[Event Store]] published event: registration to metadata and projections 🎉🎉")
 		return nil
-	case "state_change":
+	case "state_change_event":
 		return PublishProjectionEvents(event)
-	case "light_state_override":
+	case "light_state_override_event":
 		return PublishProjectionEvents(event)
-	case "light_state_override_done":
+	case "light_state_override_done_event":
 		return PublishProjectionEvents(event)
 	default:
 		return nil

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"controller/queue"
 	"os"
 
 	"github.com/gofiber/fiber/v2"
@@ -18,5 +19,6 @@ func main() {
 		port = "2222"
 	}
 
+	go queue.ConsumeEvents()
 	app.Listen(":" + port)
 }
