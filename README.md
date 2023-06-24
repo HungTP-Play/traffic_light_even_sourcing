@@ -38,22 +38,6 @@ type LightStateOverride struct {
 }
 ```
 
-- `TrafficLight` represents a single Traffic Light, with its ID, location and current state.
-
-- `StateChangeEvent` represents an event emitted when a Light changes state, with the `FromState` and `ToState`, and timestamp.
-
-- `LightStateOverride` represents a command from the Controller to a Light to change state, with the commanded state and timestamp.
-
-Then in your code, you could do:
-
-- Have a TrafficLight GORM model control its own state, updating `CurrentState` and emitting `StateChangeEvent`s as it transitions.
-
-- The Controller could query `TrafficLight` to see the current state of all Lights.
-
-- The Controller could insert `LightStateOverride` records to command a Light to change state. The Light would check for any outstanding commands before changing state on its own.
-
-- The Event Store and Projector listen for `StateChangeEvent`s and update their stores appropriately.
-
 ## Queues
 
 - `Metadata` Queue for Light registration
