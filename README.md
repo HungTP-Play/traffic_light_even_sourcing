@@ -4,100 +4,201 @@
 
 ## Models
 
+### Event Store Models
+
 ```go
-type TrafficLight struct {
-  gorm:"primary_key:id"
-  ID        uint      `gorm:"autoIncrement"`
-  Location  string    `gorm:"not null;size:255"`
-  CurrentState  string    `gorm:"not null;size:255"`
+package model
+
+type EventEmitDto struct {
+ EventID   string      `json:"event_id"`
+ EventName string      `json:"event_name"` // Could be registration_event, state_change_event, light_state_override, light_state_override_response
+ EventData interface{} `json:"event_data"`
+ EmittedAt int64       `json:"emitted_at"`
+}
+
+type EventReceiveDto struct {
+ Status string `json:"status"` // Could be success, failed
+ EventEmitDto
+}
+
+type EventCore struct {
+ EventName string `gorm:"index" json:"event_name"`
+ EmittedAt int64  `gorm:"index" json:"emitted_at"`
+}
+
+// A Data is also a DTO
+
+// Use as EventData of RegistrationEvent
+type RegistrationEventData struct {
+ LightID  string `json:"light_id"`
+ Location string `json:"location"`
 }
 
 type RegistrationEvent struct {
-  gorm:"primary_key:id"
-  ID      uint      `gorm:"autoIncrement"`
-  LightID   uint      `gorm:"not null"` 
-  Location  string    `gorm:"not null;size:255"`
-  EmittedAt time.Time `gorm:"not null"`
+ ID        string `gorm:"primaryKey" json:"id"`
+ LightID   string `gorm:"index" json:"light_id"`
+ Location  string `gorm:"index" json:"location"`
+ EventCore `gorm:"embedded"`
+}
+
+// Use as EventData of StateChangeEvent
+type StateChangeData struct {
+ LightID  string `json:"light_id"`
+ Location string `json:"location"`
+ ToState  string `json:"to_state"`
 }
 
 type StateChangeEvent struct {
-  gorm:"primary_key:id"
-  ID      uint      `gorm:"autoIncrement"`
-  LightID   uint      `gorm:"not null"` 
-  FromState   string    `gorm:"not null;size:255"`
-  ToState   string    `gorm:"not null;size:255"`
-  EmittedAt time.Time `gorm:"not null"`
+ ID        string `gorm:"primaryKey" json:"id"`
+ LightID   string `gorm:"index" json:"light_id"`
+ Location  string `gorm:"index" json:"location"`
+ FromState string `gorm:"index" json:"from_state"`
+ ToState   string `gorm:"index" json:"to_state"`
+ EventCore `gorm:"embedded"`
 }
 
-type LightStateOverride struct {
-  gorm:"primary_key:id"
-  ID      uint      `gorm:"autoIncrement"`   
-  LightID   uint      `gorm:"not null"`
-  State     string    `gorm:"not null;size:255"` 
-  CommandedAt time.Time `gorm:"not null"` 
+// Use as EventData of LightStateOverrideEvent
+type LightStateOverrideData struct {
+ LightID string `json:"light_id"`
+ ToState string `json:"to_state"`
 }
+
+type LightStateOverrideEvent struct {
+ ID        string `gorm:"primaryKey" json:"id"`
+ LightID   string `gorm:"index" json:"light_id"`
+ ToState   string `gorm:"index" json:"to_state"`
+ EventCore `gorm:"embedded"`
+}
+
+// Use as EventData of LightStateOverrideDoneEvent
+type LightStateOverrideDoneData struct {
+ LightID string `json:"light_id"`
+}
+
+type LightStateOverrideDoneEvent struct {
+ ID      string `gorm:"primaryKey" json:"id"`
+ LightID string `gorm:"index" json:"light_id"`
+ EventCore
+}
+
 ```
 
-## Queues
+### Projection Models
 
-- `Metadata` Queue for Light registration
-- `StateChange` Queue for Light state changes
+```go
+package model
+
+type EventEmitDto struct {
+ EventID   string      `json:"event_id"`
+ EventName string      `json:"event_name"` // Could be registration_event, state_change_event, light_state_override, light_state_override_response
+ EventData interface{} `json:"event_data"`
+ EmittedAt int64       `json:"emitted_at"`
+}
+
+type LightState struct {
+ LightID   string      `gorm:"primaryKey" json:"light_id"`
+ Color     int         `gorm:"index" json:"color"` // RED=1,GREEN=2,YELLOW=3
+ Location  interface{} `gorm:"type:geometry(Point,4326)"`
+ ChangedAt int64       `gorm:"index,autoUpdateTime" json:"changed_at"`
+}
+
+```
+
+### Controller Models
+
+```go
+package model
+
+type EventEmitDto struct {
+ EventID   string      `json:"event_id"`
+ EventName string      `json:"event_name"`
+ EventData interface{} `json:"event_data"`
+ EmittedAt int64       `json:"emitted_at"`
+}
+
+// This is model also an DTO
+type TrafficLight struct {
+ LightID      string `gorm:"primaryKey" json:"light_id"`
+ Location     string `gorm:"index" json:"location"`
+ RegisteredAt int64  `gorm:"index,autoCreateTime" json:"registered_at"`
+}
+
+```
+
+## Queues (A.K.A. Channels)
+
+- `Controller` Queue for control
+- `Projections` Queue for projection
 
 ## Projections
 
-Projections for the control team would be:
-
-1. Current state of all lights:
+### Current State of Traffic Lights
 
 ```sql
-SELECT * FROM TrafficLights;
+SELECT
+  light_id as "id",
+  ST_Y(location) as "latitude",
+  ST_X(location) as "longitude",
+  color as "value",
+  last_updated as "time"
+FROM light_states;
 ```
 
-This would show the control team the current state (red, green, yellow) of every light for monitoring.
-
-2. State change history for a given light:
+### Total number of traffic lights
 
 ```sql
-SELECT * FROM StateChangeEvents 
-WHERE LightID = {light_id}
-ORDER BY EmittedAt DESC;
+SELECT COUNT(*) FROM light_states;
 ```
 
-This would show the timeline of state changes for a particular light, useful for auditing or troubleshooting.
+## Prometheus
 
-3. List of pending light override commands:
+### Scrape Config
 
-```sql
-SELECT * FROM LightStateOverrides
-WHERE CommandedAt > (NOW() - INTERVAL '5' MINUTE) 
-AND (SELECT CurrentState FROM TrafficLights WHERE ID = LightID) != State; 
+Currently in `prometheus.yml` file
+
+```yaml
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    scrape_interval: 1m
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'projector'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['projector:3333']
+
 ```
 
-This would show any light override commands from the past 5 minutes that have not been implemented yet by the lights. Helpful to ensure all commands are processed properly.
+## Run Steps
 
-4. Override command history for a light:
+1. Build all services
 
-```sql
-SELECT * FROM LightStateOverrides
-WHERE LightID = {light_id}
-ORDER BY CommandedAt DESC;
+```bash
+docker-compose build
 ```
 
-This would show the history of all light override commands for a particular light, useful for auditing purposes.
+2. Run all services
 
-5. List of lights currently in a given state (e.g. red lights):
-
-```sql
-SELECT * FROM TrafficLights 
-WHERE CurrentState = 'red';
+```bash
+docker-compose up
 ```
 
-This would allow the control team to quickly see all lights in a particular state for monitoring.
+3. Open `frontend` in browser
 
-6. Count of lights in each state:
-
-```sql
-SELECT CurrentState, COUNT(*) as Count 
-FROM TrafficLights 
-GROUP BY CurrentState;
+```bash
+http://localhost:3000
 ```
+
+4. Open `projection` (grafana) in browser
+
+```bash
+http://localhost:3001
+```
+
+User is `admin` and password is `admin`
+
+Go to the `Dashboard` and select `Current Light States` dashboard
