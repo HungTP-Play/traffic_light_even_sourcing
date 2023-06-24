@@ -183,11 +183,13 @@ docker-compose build
 
 2. Run all services
 
+Remove file `.keep` in `prometheus` folder
+
 ```bash
 docker-compose up
 ```
 
-3. Open `frontend` in browser
+1. Open `frontend` in browser
 
 ```bash
 http://localhost:3000
