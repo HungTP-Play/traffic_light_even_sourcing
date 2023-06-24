@@ -100,3 +100,34 @@ services:
     volumes:
       - ./projector:/app
     command: ['go', 'run', 'main.go']
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   container_name: prometheus
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ./prometheus.yml:/etc/prometheus/prometheus.yml
+  #     - ~/data/traffic_light/prometheus:/prometheus
+  #   command:
+  #     - '--config.file=/etc/prometheus/prometheus.yml'
+  #     - '--storage.tsdb.path=/prometheus'
+  #     - '--web.console.libraries=/etc/prometheus/console_libraries'
+  #     - '--web.console.templates=/etc/prometheus/consoles'
+  #     - '--web.enable-lifecycle'
+  #   expose:
+  #     - 9090
+  #   depends_on:
+  #     - event_store
+  #     - controller
+  #     - projector
+  # grafana:
+  #   image: grafana/grafana:latest
+  #   container_name: grafana
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ~/data/traffic_light/grafana:/var/lib/grafana
+  #   environment:
+  #     - GF_SECURITY_ADMIN_PASSWORD=admin
+  #   ports:
+  #     - 3001:3000
+  #   depends_on:
+  #     - prometheus
