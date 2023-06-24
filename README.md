@@ -1,6 +1,6 @@
 # Overview Architecture
 
-![Architecture](https://i.ibb.co/sykzVs0/2023-06-23-01-35.png)
+![Architecture](https://i.ibb.co/xLs32Y2/2023-06-25-02-47.png)
 
 ## Models
 
