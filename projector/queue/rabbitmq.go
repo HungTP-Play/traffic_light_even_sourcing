@@ -1,12 +1,64 @@
 package queue
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
+	"projector/metrics"
+	"projector/model"
+	"projector/repo"
+	"projector/util"
+	"strings"
 	"time"
 
 	"github.com/streadway/amqp"
 )
+
+func colorToInt(color string) int {
+	if color == "RED" {
+		return 1
+	} else if color == "GREEN" {
+		return 2
+	} else if color == "YELLOW" {
+		return 3
+	} else {
+		return 0
+	}
+}
+
+func HandleMessage(event string) {
+	var eventEmitDto model.EventEmitDto
+	err := json.Unmarshal([]byte(event), &eventEmitDto)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to unmarshal event: %s", err)
+	}
+
+	if eventEmitDto.EventName == "registration_event" {
+		location := eventEmitDto.EventData.(map[string]interface{})["location"].(string)
+		// The location is in the format of "lat::lng"
+		locationLat := location[:strings.Index(location, "::")]
+		locationLng := location[strings.Index(location, "::")+2:]
+		lightID := eventEmitDto.EventData.(map[string]interface{})["light_id"].(string)
+		color := "RED"
+
+		// And default color is RED=1, GREEN=2, YELLOW=3
+		metrics.SetTrafficLightState(lightID, locationLat, locationLng, util.StringColorToInt(color))
+
+		repo.UpsertTrafficLight(lightID, util.StringToFloat64(locationLat), util.StringToFloat64(locationLng), util.StringColorToInt(color))
+	}
+
+	if eventEmitDto.EventName == "state_change_event" {
+		location := eventEmitDto.EventData.(map[string]interface{})["location"].(string)
+		locationLat := location[:strings.Index(location, "::")]
+		locationLng := location[strings.Index(location, "::")+2:]
+		lightID := eventEmitDto.EventData.(map[string]interface{})["light_id"].(string)
+		color := eventEmitDto.EventData.(map[string]interface{})["to_state"].(string)
+		// And default color is RED=1, GREEN=2, YELLOW=3
+		metrics.SetTrafficLightState(lightID, locationLat, locationLng, util.StringColorToInt(color))
+
+		repo.UpsertTrafficLight(lightID, util.StringToFloat64(locationLat), util.StringToFloat64(locationLng), util.StringColorToInt(color))
+	}
+}
 
 func ConsumeEvents() error {
 	// Wait for 30 secs
@@ -61,7 +113,7 @@ func ConsumeEvents() error {
 	go func() {
 		for msg := range msgs {
 			event := string(msg.Body)
-			fmt.Println("[[Projector]] Received event:", event)
+			HandleMessage(event)
 		}
 	}()
 

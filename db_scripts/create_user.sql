@@ -12,9 +12,9 @@ GRANT CREATE ON SCHEMA public TO projector_usr;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO projector_usr;
 GRANT INSERT, SELECT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO projector_usr;
 
-CREATE USER light_metadata_usr WITH ENCRYPTED PASSWORD 'light_metadata_pass';
-GRANT ALL ON DATABASE light_metadata TO light_metadata_usr;
-GRANT ALL ON SCHEMA public TO light_metadata_usr;
-GRANT CREATE ON SCHEMA public TO light_metadata_usr;
-GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO light_metadata_usr;
-GRANT INSERT, SELECT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO light_metadata_usr;
+CREATE USER controller_usr WITH ENCRYPTED PASSWORD 'controller_pass';
+GRANT ALL ON DATABASE controller TO controller_usr;
+GRANT ALL ON SCHEMA public TO controller_usr;
+GRANT CREATE ON SCHEMA public TO controller_usr;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO controller_usr;
+GRANT INSERT, SELECT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO controller_usr;

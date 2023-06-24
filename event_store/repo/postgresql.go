@@ -52,8 +52,10 @@ func GetDB() *gorm.DB {
 }
 
 func CloseDB() {
-	db, _ := db.DB()
-	db.Close()
+	if db != nil {
+		dbb, _ := db.DB()
+		dbb.Close()
+	}
 }
 
 func StoreEvent(event model.EventEmitDto) error {

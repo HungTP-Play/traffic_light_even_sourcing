@@ -2,6 +2,7 @@ package main
 
 import (
 	"controller/queue"
+	"controller/repo"
 	"os"
 
 	"github.com/gofiber/fiber/v2"
@@ -9,6 +10,7 @@ import (
 
 func main() {
 	app := fiber.New()
+	defer repo.CloseDB()
 
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Hello, World!")

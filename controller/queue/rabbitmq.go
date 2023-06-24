@@ -1,12 +1,36 @@
 package queue
 
 import (
+	"controller/model"
+	"controller/repo"
+	"encoding/json"
 	"fmt"
 	"os"
 	"time"
 
 	"github.com/streadway/amqp"
 )
+
+func HandleMessage(event string) {
+	fmt.Printf("[[Controller]] Received event: %s\n", event)
+	var eventEmitDto model.EventEmitDto
+	err := json.Unmarshal([]byte(event), &eventEmitDto)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to unmarshal event: %s", err)
+	}
+
+	if eventEmitDto.EventName == "registration_event" {
+		newLight := model.TrafficLight{
+			LightID:      eventEmitDto.EventData.(map[string]interface{})["light_id"].(string),
+			Location:     eventEmitDto.EventData.(map[string]interface{})["location"].(string),
+			RegisteredAt: time.Now().Unix(),
+		}
+		err = repo.StoreTrafficLight(newLight)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to store traffic light: %s", err)
+		}
+	}
+}
 
 func ConsumeEvents() error {
 	// Wait for 30 secs
@@ -61,7 +85,7 @@ func ConsumeEvents() error {
 	go func() {
 		for msg := range msgs {
 			event := string(msg.Body)
-			fmt.Println("[[Controller]] Received event:", event)
+			HandleMessage(event)
 		}
 	}()
 

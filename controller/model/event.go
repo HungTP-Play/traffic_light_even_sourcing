@@ -1,46 +1,15 @@
 package model
 
-import "time"
+type EventEmitDto struct {
+	EventID   string      `json:"event_id"`
+	EventName string      `json:"event_name"`
+	EventData interface{} `json:"event_data"`
+	EmittedAt int64       `json:"emitted_at"`
+}
 
+// This is model also an DTO
 type TrafficLight struct {
-	ID           uint   `gorm:"autoIncrement"`
-	Location     string `gorm:"not null;size:255"`
-	CurrentState string `gorm:"not null;size:255"`
-}
-
-type EventCore struct {
-	EventName string    `gorm:"not null;size:255"`
-	EmittedAt time.Time `gorm:"not null"`
-}
-
-type RegistrationEvent struct {
-	ID       uint   `gorm:"autoIncrement"`
-	LightID  uint   `gorm:"not null"`
-	Location string `gorm:"not null;size:255"`
-	EventCore
-}
-
-// After receive this event, the traffic light state is already changed
-type StateChangeEvent struct {
-	ID        uint   `gorm:"autoIncrement"`
-	LightID   uint   `gorm:"not null"`
-	FromState string `gorm:"not null;size:255"`
-	ToState   string `gorm:"not null;size:255"`
-	EventCore
-}
-
-// After receive this event, the traffic light is command to change but not sure if it's changed
-type LightStateOverride struct {
-	ID      uint   `gorm:"autoIncrement"`
-	LightID uint   `gorm:"not null"`
-	State   string `gorm:"not null;size:255"`
-	EventCore
-}
-
-// Response to LightStateOverride event that the traffic light is changed
-type LightStateOverrideResponse struct {
-	ID      uint   `gorm:"autoIncrement"`
-	LightID uint   `gorm:"not null"`
-	State   string `gorm:"not null;size:255"`
-	EventCore
+	LightID      string `gorm:"primaryKey" json:"light_id"`
+	Location     string `gorm:"index" json:"location"`
+	RegisteredAt int64  `gorm:"index,autoCreateTime" json:"registered_at"`
 }

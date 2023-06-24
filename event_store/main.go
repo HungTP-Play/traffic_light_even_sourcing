@@ -17,6 +17,7 @@ func dispatch(event model.EventEmitDto) error {
 
 func main() {
 	app := fiber.New()
+	defer repo.CloseDB()
 
 	app.Post("/emit", func(c *fiber.Ctx) error {
 		body := c.Body()

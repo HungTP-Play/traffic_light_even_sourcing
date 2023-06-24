@@ -34,14 +34,15 @@ type RegistrationEvent struct {
 
 // Use as EventData of StateChangeEvent
 type StateChangeData struct {
-	LightID   string `json:"light_id"`
-	FromState string `json:"from_state"`
-	ToState   string `json:"to_state"`
+	LightID  string `json:"light_id"`
+	Location string `json:"location"`
+	ToState  string `json:"to_state"`
 }
 
 type StateChangeEvent struct {
 	ID        string `gorm:"primaryKey" json:"id"`
 	LightID   string `gorm:"index" json:"light_id"`
+	Location  string `gorm:"index" json:"location"`
 	FromState string `gorm:"index" json:"from_state"`
 	ToState   string `gorm:"index" json:"to_state"`
 	EventCore `gorm:"embedded"`

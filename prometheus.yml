@@ -1,5 +1,5 @@
 global:
-  scrape_interval: 1m
+  scrape_interval: 15s
 
 scrape_configs:
   - job_name: 'prometheus'
@@ -8,5 +8,6 @@ scrape_configs:
       - targets: ['localhost:9090']
 
   - job_name: 'projector'
+    metrics_path: /metrics
     static_configs:
       - targets: ['projector:3333']
