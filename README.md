@@ -208,3 +208,23 @@ http://localhost:3001
 User is `admin` and password is `admin`
 
 Go to the `Dashboard` and select `Current Light States` dashboard
+
+---
+
+## Images
+
+### Projection (Grafana)
+
+![Projection](./images/projections.png)
+
+### Log
+
+![Log](./images/log.png)
+
+### Frontend
+
+![Frontend](./images/frontend.png)
+
+`Red`, `Green`, `Yellow` inputs for inputting time length of each state in seconds
+
+`Create` button for creating new traffic light
