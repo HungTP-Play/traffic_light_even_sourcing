@@ -5,6 +5,7 @@ import (
 	"event_store/model"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/streadway/amqp"
 )
@@ -18,6 +19,12 @@ func getRabbitMQConnection() string {
 }
 
 var conn *amqp.Connection
+
+func init() {
+	// wait for rabbitmq to start about 10 seconds
+	time.Sleep(10 * time.Second)
+	conn = Connect()
+}
 
 func Connect() *amqp.Connection {
 	connectionString := getRabbitMQConnection()

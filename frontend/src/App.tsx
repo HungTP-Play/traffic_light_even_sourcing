@@ -85,7 +85,7 @@ function App() {
           {lights.map((light, index) => {
             return <Light latLong={
               light.latLong
-            } lightId={light.lightId} times={light.times} index={index} key={`${getUUID()}`} />
+            } lightId={light.lightId} times={light.times} index={index} key={`${light.lightId}`} />
           })}
         </div>
         <div className='control' style={{

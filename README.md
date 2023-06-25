@@ -181,6 +181,10 @@ scrape_configs:
 docker-compose build
 ```
 
+1.1. Windown user
+
+Update mount path in `docker-compose.yml` file of `postgres` and `rabbitmq` services
+
 2. Run all services
 
 Remove file `.keep` in `prometheus` folder
@@ -189,7 +193,7 @@ Remove file `.keep` in `prometheus` folder
 docker-compose up
 ```
 
-1. Open `frontend` in browser
+3. Open `frontend` in browser
 
 ```bash
 http://localhost:3000

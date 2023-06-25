@@ -14,6 +14,13 @@ import (
 	"github.com/streadway/amqp"
 )
 
+var conn *amqp.Connection
+
+func init() {
+	time.Sleep(10 * time.Second)
+	conn = Connect()
+}
+
 func colorToInt(color string) int {
 	if color == "RED" {
 		return 1
@@ -60,10 +67,7 @@ func HandleMessage(event string) {
 	}
 }
 
-func ConsumeEvents() error {
-	// Wait for 30 secs
-	time.Sleep(30 * time.Second)
-
+func Connect() *amqp.Connection {
 	connString := os.Getenv("RABBITMQ_CONNECTION_STRING")
 	if connString == "" {
 		fmt.Fprintln(os.Stderr, "RABBITMQ_CONNECTION_STRING is not set")
@@ -72,6 +76,28 @@ func ConsumeEvents() error {
 	conn, err := amqp.Dial(connString)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to connect to RabbitMQ: %s", err)
+	}
+
+	return conn
+}
+
+func Close() {
+	conn.Close()
+}
+
+func GetConnection() *amqp.Connection {
+	if conn == nil {
+		conn = Connect()
+	}
+
+	return conn
+}
+
+func ConsumeEvents() error {
+	time.Sleep(15 * time.Second)
+	conn := GetConnection()
+	if conn.IsClosed() {
+		conn = Connect()
 	}
 	defer conn.Close()
 

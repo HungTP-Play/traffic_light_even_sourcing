@@ -66,7 +66,7 @@ export function Light(props: {
     // Create timer (interval) for each color
     // RED, YELLOW, GREEN, YELLOW, RED,...
     React.useEffect(() => {
-        const firstDelay = 5 * 1000;
+        const firstDelay = 1 * 1000;
         let interval: NodeJS.Timeout;
         const firstDelayTimeout = setTimeout(() => {
             const intervalTime = (red + yellow * 2 + green) * 1000;
@@ -85,7 +85,7 @@ export function Light(props: {
 
     // YELLOW 1
     React.useEffect(() => {
-        const firstDelay = red * 1000 + 5 * 1000;
+        const firstDelay = red * 1000 + 1 * 1000;
         let yellowInterval: NodeJS.Timeout;
         const firstDelayTimeout = setTimeout(() => {
             const intervalTime = (green + yellow + red) * 1000;
@@ -102,7 +102,7 @@ export function Light(props: {
 
     // GREEN
     React.useEffect(() => {
-        const firstDelay = red * 1000 + yellow * 1000 + 5 * 1000;
+        const firstDelay = red * 1000 + yellow * 1000 + 1 * 1000;
         let greenInterval: NodeJS.Timeout;
         const delayTimeout = setTimeout(() => {
             const intervalTime = (red + yellow * 2) * 1000;
@@ -119,7 +119,7 @@ export function Light(props: {
 
     // YELLOW 2
     React.useEffect(() => {
-        const firstDelay = red * 1000 + yellow * 1000 + green * 1000 + 5 * 1000;
+        const firstDelay = red * 1000 + yellow * 1000 + green * 1000 + 1 * 1000;
         let yellowInterval: NodeJS.Timeout;
         const delayTimeout = setTimeout(() => {
             const intervalTime = (red + green + yellow * 2) * 1000;
